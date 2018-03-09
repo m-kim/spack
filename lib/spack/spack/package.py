@@ -627,33 +627,43 @@ class PackageBase(with_metaclass(PackageMeta, object)):
 
         super(PackageBase, self).__init__()
 
-    def possible_dependencies(self, transitive=True, visited=None):
-        """Return set of possible transitive dependencies of this package.
+    def _possible_dependencies(self, transitive, visited):
+        """Recursive helper for ``possible_dependencies()``.
 
         Args:
-            transitive (bool): include all transitive dependencies if True,
-                only direct dependencies if False.
+            transitive (bool): process dependencies recursively.
+            visited (set): set of names of dependencies visited so far.
         """
         if visited is None:
             visited = set()
 
-        visited.add(self.name)
-        for name in self.dependencies:
-            spec = spack.spec.Spec(name)
-
-            if not spec.virtual:
-                visited.add(name)
-                if transitive:
-                    pkg = spack.repo.get(name)
-                    pkg.possible_dependencies(transitive, visited)
+        for i, name in enumerate(self.dependencies):
+            if spack.repo.is_virtual(name):
+                providers = spack.repo.providers_for(name)
+                dep_names = [spec.name for spec in providers]
             else:
-                for provider in spack.repo.providers_for(spec):
-                    visited.add(provider.name)
+                dep_names = [name]
+
+            for dep_name in dep_names:
+                if dep_name not in visited:
+                    visited.add(dep_name)
                     if transitive:
-                        pkg = spack.repo.get(provider.name)
-                        pkg.possible_dependencies(transitive, visited)
+                        pkg = spack.repo.get(dep_name)
+                        pkg._possible_dependencies(transitive, visited)
 
         return visited
+
+    def possible_dependencies(self, transitive=True):
+        """Return set of possible dependencies of this package.
+
+        Args:
+            transitive (bool): return all transitive dependencies if True,
+                only direct dependencies if False.
+        """
+        deps = set([self.name])
+        self._possible_dependencies(transitive, deps)
+        deps.remove(self.name)
+        return deps
 
     @property
     def package_dir(self):
