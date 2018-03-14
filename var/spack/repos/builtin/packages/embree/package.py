@@ -47,7 +47,7 @@ class Embree(CMakePackage):
     homepage = "https://embree.github.io"
     url      = "https://github.com/embree/embree/archive/v3.0.0.tar.gz"
 
-    version('3.0.0')
+    version('2.17.3', git='https://github.com/embree/embree.git', tag='v2.17.3')
 
     depends_on('ispc')
     depends_on('tbb')
@@ -57,9 +57,11 @@ class Embree(CMakePackage):
 
     def install(self, spec, prefix):
         # FIXME: Unknown build system
-        cmake("")
+        cmake("-DCMAKE_INSTALL_PREFIX:PATH=" + prefix)
         make()
         make('install')
-    
-    #def setup_environment(self, spack_env, run_env):
-    #    run_env.prepend_path('PATH',join_path(self.prefix, 'ISPC_EXECUTABLE
+        
+    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+        dependent_spec.embree_DIR = self.prefix
+        spack_env.set('embree_DIR', self.prefix)
+

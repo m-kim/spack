@@ -38,27 +38,35 @@
 # please first remove this boilerplate and all FIXME comments.
 #
 from spack import *
-
+import os
 
 class Ospray(CMakePackage):
     """build ospray"""
 
     homepage = "https://www.ospray.org/"
-    url      = "https://github.com/ospray/OSPRay/archive/v1.5.0.tar.gz"
-    #url = "https://github.com/ospray/ospray/releases/download/v1.5.0/ospray-1.5.0.x86_64.linux.tar.gz"
-    version('1.5.0')
+    url      = "https://github.com/ospray/OSPRay"
+    #version('1.4.3',git='https://github.com/ospray/ospray.git', tag='v1.4.3')
+    version('1.5.0',git='https://github.com/ospray/ospray.git', tag='v1.5.0')
 
     depends_on('ispc')
-    depends_on('embree')
+    depends_on('embree',type=('build','link'))
 
-    def install(self, spec, prefix):
-        cmake("-DOSPRAY_TASKING_SYSTEM:STRING=Internal")
-        make()
-        #make('install')
+    def cmake_args(self):
+        cmake_args = ['-D embree_DIR=' + self.embree_DIR
+        ]
+        print('-----------------------------'+ str(cmake_args))
+        return cmake_args
+    # def install(self, spec, prefix):
+    #     #cmake("-DOSPRAY_TASKING_SYSTEM:STRING=Internal")
+    #     cmake('-D embree_DIR=' + self.embree_DIR)
+    #     make()
+    #     #make('install')
     # def cmake_args(self):
     #     spec = self.spec
 
     #     cmake_args = [
-    #         '-DOSPRAY_TASKING_SYSTEM:STRING=Interal',
+    #         '-DOSPRAY_TASKING_SYSTEM:STRING=Internal',
     #     ]
+    def setup_environment(self, spack_env, run_env):
+        self.embree_DIR = self.spec.embree_DIR
             
