@@ -38,21 +38,29 @@
 # please first remove this boilerplate and all FIXME comments.
 #
 from spack import *
-
+from llnl.util.filesystem import mkdirp, join_path, touch, ancestor
+from llnl.util.filesystem import working_dir, install_tree, install
+import os
 
 class Ispc(Package):
     """FIXME: Put a proper description of your package here."""
 
     homepage = "https://ispc.github.io/"
-    url      = "https://github.com/ispc/ispc/tarball/v1.9.2"
+    url      = "https://github.com/ispc"
+    # version('1.9.2', git='https://github.com/ispc/ispc.git', tag='v1.9.2')
+    # depends_on('llvm+clang@5.0.1', type=('build', 'link'))
 
-    version('1.9.2', git='https://github.com/ispc/ispc.git', tag='v1.9.2')
+    version('1.9.1', git='https://github.com/ispc/ispc.git', tag='v1.9.1')
+    depends_on('llvm+clang@3.9.0', type=('build', 'link'))
 
-    # FIXME: Add dependencies if required.
-    depends_on('llvm')
     
-
     def install(self, spec, prefix):
-        # FIXME: Unknown build system
-        make()
-        make('install')
+        make("gcc")
+        #sanity_check_prefix looks for directories other than .spack to confirm
+        #install is complete
+        print(self.stage.source_path)
+        mkdirp(prefix.bin)
+        os.rename(join_path(self.stage.source_path, self.name), join_path(prefix.bin , self.name))
+        
+    def setup_environment(self, spack_env, run_env):
+        run_env.prepend_path('ISPC_HOME',self.prefix)

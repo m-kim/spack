@@ -405,6 +405,12 @@ class Llvm(CMakePackage):
             run_env.set('CC', join_path(self.spec.prefix.bin, 'clang'))
             run_env.set('CXX', join_path(self.spec.prefix.bin, 'clang++'))
 
+    def setup_dependent_environment(self, spack_env, run_env, dependent_spec):
+        import os
+        spack_env.set('LLVM_HOME', self.prefix)
+        spack_env.prepend_path('PATH', os.path.dirname(self.prefix + '/bin'))
+        spack_env.prepend_path('LD_LIBRARY_PATH', os.path.dirname(self.prefix + '/lib'))
+        
     def cmake_args(self):
         spec = self.spec
 
